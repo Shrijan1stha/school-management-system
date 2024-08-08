@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Student, Teacher, Classes, Schedule, AcademicRecord, Exam, Grade, Attendence
+from .models import User, Student, Teacher, Classes, Schedule, AcademicRecord, Exam, Grade, Attendence, Subject, Assignment, AssignmentSubmission
 from django.contrib.auth.models import Group
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -50,4 +50,19 @@ class GradeSerializer(serializers.ModelSerializer):
 class AttendenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendence
+        fields = '__all__'
+
+class SubjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subject
+        fields = '__all__'
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+
+class AssignmentSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssignmentSubmission
         fields = '__all__'

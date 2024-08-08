@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Student, Teacher, Classes, DayOfWeek, Schedule, AcademicRecord, Exam, Grade, Attendence
+from .models import User, Student, Teacher, Classes, DayOfWeek, Schedule, AcademicRecord, Exam, Grade, Attendence, Subject, Assignment, AssignmentSubmission, Section, ClassSection
 
 # Register your models here.
 admin.site.register(User)
@@ -12,3 +12,8 @@ admin.site.register(AcademicRecord)
 admin.site.register(Exam)
 admin.site.register(Grade)
 admin.site.register(Attendence)
+admin.site.register(Subject)
+admin.site.register(Assignment)
+admin.site.register(AssignmentSubmission)
+admin.site.register(Section)
+admin.site.register(ClassSection)

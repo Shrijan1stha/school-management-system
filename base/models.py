@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -19,13 +20,26 @@ class Classes(models.Model):
 
     def __str__(self):
         return str(self.name)
+    
+class Section(models.Model):
+    name = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.name
+
+class ClassSection(models.Model):
+    class_name = models.ForeignKey(Classes, on_delete=models.SET_NULL, null=True)
+    section_name = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.class_name}-{self.section_name}"
 
 class Student(models.Model):
     first_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100)
     roll_number = models.CharField(max_length=20, unique=True, null=True)
-    class_section = models.ForeignKey(Classes, on_delete=models.SET_NULL, null=True)
+    class_section = models.ForeignKey(ClassSection, on_delete=models.SET_NULL, null=True)
     phone_number = models.IntegerField()
     email = models.EmailField(max_length=200)
 
@@ -38,6 +52,11 @@ class Student(models.Model):
     class Meta:
         verbose_name_plural = 'student'
 
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return self.name
 
 class Teacher(models.Model):
     first_name = models.CharField(max_length=100)
@@ -45,7 +64,8 @@ class Teacher(models.Model):
     last_name = models.CharField(max_length=100)
     phone_number = models.IntegerField(unique=True)
     email = models.EmailField(unique=True,max_length=200)
-    classes = models.ManyToManyField(Classes)
+    classes = models.ManyToManyField(ClassSection)
+    subject = models.ManyToManyField(Subject)
 
     def __str__(self):
         if self.middle_name is None:
@@ -55,7 +75,7 @@ class Teacher(models.Model):
     
     class Meta:
         verbose_name_plural = 'teacher'
-    
+
 class DayOfWeek(models.Model):
     name = models.CharField(max_length=10, choices=[
         ('Monday', 'Monday'),
@@ -91,12 +111,12 @@ class AcademicRecord(models.Model):
         return str(self.student)
     
 class Exam(models.Model):
-    exam_subject = models.CharField(max_length=100)
+    exam_subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null=True)
     exam_date = models.DateField()
     exam_time = models.TimeField()
 
     def __str__(self):
-        return self.exam_subject
+        return self.exam_subject.name
 
 class Grade(models.Model):
     student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True)
@@ -118,3 +138,33 @@ class Attendence(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.date} - {self.status}"
+    
+class Assignment(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    assigned_date = models.DateField()
+    due_date = models.DateField()
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True)
+    class_assigned = models.ForeignKey(ClassSection, on_delete=models.SET_NULL, null=True)
+    subject = models.ForeignKey(Subject,on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.title} class-{self.class_assigned}"
+    
+    def clean(self):
+        if self.due_date < self.assigned_date:
+            raise ValidationError('Submission date cannot be before assigned date')
+        
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+class AssignmentSubmission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    submission_date = models.DateField(null=True, blank=True)
+    grade = models.CharField(max_length=5, null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.assignment.title} - {self.student.first_name} {self.student.last_name}"
